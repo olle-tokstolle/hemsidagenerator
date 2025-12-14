@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fråga Fredrik</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #001022;
+      color: #ff00ff;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    h1 {
+      font-size: 36px;
+      color: yellow;
+      text-shadow: 2px 2px red;
+    }
+    textarea {
+      width: 80%;
+      height: 100px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 16px;
+      border: 3px dotted pink;
+      background-color: #ffff99;
+      color: #000080;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: yellow;
+      background-color: red;
+      border: 2px solid pink;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: pink;
+      color: red;
+    }
+    #response {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 24px;
+      color: cyan;
+      text-shadow: 1px 1px black;
+    }
+    .snowflake {
+      position: absolute;
+      color: white;
+      user-select: none;
+      pointer-events: none;
+    }
+    #hat {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      image-rendering: pixelated;
+      background: url('https://i.gifer.com/origin/08/0834037c00f0a7eea4215dbc9293dc6f_w200.gif') no-repeat center/contain;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fråga Fredrik</h1>
+
+  <textarea id="userInput" placeholder="Skriv här..."></textarea>
+  <br />
+  <button onclick="generateResponse()">Få svar</button>
+  <br />
+  <button onclick="window.location.href='fraga-olle.html'">Dåligt svar, fråga Olle istället</button>
+
+  <div id="response"></div>
+  <div id="hat"></div>
+
+  <script>
+    const responses = [
+      "bra fråga, typ",
+      "kåt jävel typ?",
+      "brorsan",
+      "ja, tyvärr",
+      "nej, tyvärr",
+      "Intressant",
+      "vad menar du brorsan",
+      "Absolut",
+      "bruuudar",
+      "brudar?"
+    ];
+
+    function generateResponse() {
+      const input = document.getElementById("userInput").value.trim();
+      const responseDiv = document.getElementById("response");
+      if (!input) { responseDiv.textContent = "Skriv något först."; return; }
+      const randomIndex = Math.floor(Math.random() * responses.length);
+      responseDiv.textContent = responses[randomIndex];
+    }
+
+    const snowflakes = [];
+    const numSnowflakes = 50;
+
+    for (let i = 0; i < numSnowflakes; i++) {
+      const snow = document.createElement('div');
+      snow.classList.add('snowflake');
+      snow.textContent = '❄';
+      snow.style.fontSize = (10 + Math.random() * 20) + 'px';
+      snow.style.left = Math.random() * window.innerWidth + 'px';
+      snow.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(snow);
+      snowflakes.push({
+        el: snow,
+        x: parseFloat(snow.style.left),
+        y: parseFloat(snow.style.top),
+        speed: 0.3 + Math.random() * 1.2,
+        swing: Math.random() * 50
+      });
+    }
+
+    function animateSnow() {
+      snowflakes.forEach(f => {
+        f.y += f.speed;
+        f.x += Math.sin(f.y / 50) * 0.5;
+        if (f.y > window.innerHeight) f.y = -20;
+        f.el.style.top = f.y + 'px';
+        f.el.style.left = f.x + 'px';
+      });
+      requestAnimationFrame(animateSnow);
+    }
+
+    animateSnow();
+  </script>
+</body>
+</html>
