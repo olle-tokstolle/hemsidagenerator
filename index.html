@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>Fråga Fredrik</title>
+  <title>Fråga Fredrik + Gästbok</title>
   <style>
     body {
       font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -11,14 +11,14 @@
       text-align: center;
       margin: 0;
       padding: 20px;
-      overflow: hidden;
-      position: relative;
     }
-    h1 {
+
+    h1, h2 {
       font-size: 36px;
       color: yellow;
       text-shadow: 2px 2px red;
     }
+
     textarea {
       width: 80%;
       height: 100px;
@@ -27,7 +27,20 @@
       border: 3px dotted pink;
       background-color: #ffff99;
       color: #000080;
+      margin-top: 10px;
     }
+
+    input[type="text"] {
+      width: 80%;
+      height: 35px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 16px;
+      border: 3px dotted pink;
+      background-color: #ffff99;
+      color: #000080;
+      margin-top: 10px;
+    }
+
     button {
       margin-top: 10px;
       padding: 10px 20px;
@@ -38,10 +51,12 @@
       border: 2px solid pink;
       cursor: pointer;
     }
+
     button:hover {
       background-color: pink;
       color: red;
     }
+
     #response {
       margin-top: 20px;
       font-weight: bold;
@@ -49,12 +64,27 @@
       color: cyan;
       text-shadow: 1px 1px black;
     }
-    .snowflake {
-      position: absolute;
+
+    #guestbookEntries {
+      margin-top: 20px;
+      text-align: left;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
       color: white;
-      user-select: none;
-      pointer-events: none;
+      font-size: 14px;
     }
+
+    .entry {
+      border-bottom: 1px dotted pink;
+      padding: 8px 0;
+    }
+
+    .timestamp {
+      color: #00ffff;
+      font-size: 12px;
+    }
+
     #hat {
       position: absolute;
       bottom: 0;
@@ -68,6 +98,7 @@
   </style>
 </head>
 <body>
+
   <h1>Fråga Fredrik</h1>
 
   <textarea id="userInput" placeholder="Skriv här..."></textarea>
@@ -77,8 +108,24 @@
   <button onclick="window.location.href='fraga-olle.html'">Dåligt svar, fråga Olle istället</button>
 
   <div id="response"></div>
+
+  <h2>Gästbok</h2>
+  <input type="text" id="guestName" placeholder="Ditt namn (obligatoriskt)">
+  <textarea id="guestMessage" placeholder="Skriv ett inlägg i gästboken..."></textarea><br>
+  <button onclick="addGuestbookEntry()">Skicka inlägg</button>
+
+  <div id="guestbookEntries"></div>
   <div id="hat"></div>
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://gxovjflaunxsoalggykg.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_7Rkwvt09TY9aR3F3Z6eQ1Q_rOim1pyH";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+
+  <!-- Fråga Fredrik -->
   <script>
     const responses = [
       "bra fråga, typ",
@@ -100,39 +147,49 @@
       const randomIndex = Math.floor(Math.random() * responses.length);
       responseDiv.textContent = responses[randomIndex];
     }
+  </script>
 
-    const snowflakes = [];
-    const numSnowflakes = 50;
+  <!-- Gästbok -->
+  <script>
+    async function loadGuestbook() {
+      const { data, error } = await supabase
+        .from('guestbook')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error(error); return; }
 
-    for (let i = 0; i < numSnowflakes; i++) {
-      const snow = document.createElement('div');
-      snow.classList.add('snowflake');
-      snow.textContent = '❄';
-      snow.style.fontSize = (10 + Math.random() * 20) + 'px';
-      snow.style.left = Math.random() * window.innerWidth + 'px';
-      snow.style.top = Math.random() * window.innerHeight + 'px';
-      document.body.appendChild(snow);
-      snowflakes.push({
-        el: snow,
-        x: parseFloat(snow.style.left),
-        y: parseFloat(snow.style.top),
-        speed: 0.3 + Math.random() * 1.2,
-        swing: Math.random() * 50
+      const entriesDiv = document.getElementById("guestbookEntries");
+      entriesDiv.innerHTML = "";
+      data.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        const time = new Date(entry.created_at).toLocaleString("sv-SE");
+        div.innerHTML = `<strong>${entry.name}</strong><br>${entry.message}<br><span class="timestamp">${time}</span>`;
+        entriesDiv.appendChild(div);
       });
     }
 
-    function animateSnow() {
-      snowflakes.forEach(f => {
-        f.y += f.speed;
-        f.x += Math.sin(f.y / 50) * 0.5;
-        if (f.y > window.innerHeight) f.y = -20;
-        f.el.style.top = f.y + 'px';
-        f.el.style.left = f.x + 'px';
-      });
-      requestAnimationFrame(animateSnow);
+    async function addGuestbookEntry() {
+      const name = document.getElementById("guestName").value.trim();
+      const message = document.getElementById("guestMessage").value.trim();
+
+      if (!name) { alert("Du måste fylla i ditt namn."); return; }
+      if (!message) { alert("Du måste skriva ett inlägg."); return; }
+
+      const { error } = await supabase
+        .from('guestbook')
+        .insert([{ name, message }]);
+      if (error) { alert("Fel vid sparande."); console.error(error); return; }
+
+      document.getElementById("guestName").value = "";
+      document.getElementById("guestMessage").value = "";
+
+      loadGuestbook();
     }
 
-    animateSnow();
+    // Ladda gästboken direkt
+    loadGuestbook();
   </script>
 </body>
 </html>
+
